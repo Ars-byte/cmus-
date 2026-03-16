@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Solarized Dark theme for CMUS++ -->
+<theme name="solarized">
+  <fg0  r="253" g="246" b="227"/>
+  <fg1  r="238" g="232" b="213"/>
+  <fg2  r="101" g="123" b="131"/>
+  <fg3  r="88"  g="110" b="117"/>
+
+  <acc  r="133" g="153" b="0"/>
+  <warn r="181" g="137" b="0"/>
+
+  <bghdr  bgr="0"   bgg="43"  bgb="54"  fgr="38"  fgg="139" fgb="210"/>
+  <bgsel  bgr="7"   bgg="54"  bgb="66"  fgr="253" fgg="246" fgb="227"/>
+  <bgplay bgr="0"   bgg="40"  bgb="20"  fgr="133" fgg="153" fgb="0"/>
+  <bgstat bgr="0"   bgg="36"  bgb="43"  fgr="88"  fgg="110" fgb="117"/>
+</theme>

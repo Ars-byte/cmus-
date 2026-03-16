@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Monokai theme for CMUS++
+  Drop any .xml file in the themes/ directory and it loads automatically.
+  Press 't' in-app to cycle through all themes (built-in + XML).
+
+  Color fields:
+    fg0/fg1/fg2/fg3  : foreground brightness levels (bright → muted)
+    acc              : accent color (typically green-ish)
+    warn             : warning / amber color
+    bghdr/bgsel/bgplay/bgstat : bg+fg combos for each UI zone
+      attributes: bgr bgg bgb  (background RGB)
+                  fgr fgg fgb  (foreground RGB)
+-->
+<theme name="monokai">
+  <!-- Foreground: bright, normal, dim, muted -->
+  <fg0  r="248" g="248" b="242"/>
+  <fg1  r="215" g="210" b="195"/>
+  <fg2  r="117" g="113" b="94"/>
+  <fg3  r="75"  g="71"  b="60"/>
+
+  <!-- Accent (green) and warning (yellow) -->
+  <acc  r="166" g="226" b="46"/>
+  <warn r="230" g="219" b="116"/>
+
+  <!-- Header bar -->
+  <bghdr  bgr="39"  bgg="40"  bgb="34"  fgr="102" fgg="217" fgb="239"/>
+  <!-- Selected row -->
+  <bgsel  bgr="73"  bgg="72"  bgb="62"  fgr="248" fgg="248" fgb="242"/>
+  <!-- Currently playing row -->
+  <bgplay bgr="30"  bgg="44"  bgb="18"  fgr="166" fgg="226" fgb="46"/>
+  <!-- Status bar -->
+  <bgstat bgr="29"  bgg="29"  bgb="24"  fgr="117" fgg="113" fgb="94"/>
+</theme>
