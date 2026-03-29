@@ -400,7 +400,12 @@ inline std::string build_kitty_upload(const RawImg& img, int id) {
     }
     std::string b64 = base64_encode(rgb.data(), rgb.size());
     std::string seq;
-    size_t pos = 0, chunk_size = 4096;
+    
+    size_t chunk_size = 4096;
+    // Pre-alocar memoria para mejorar eficiencia en concatenación
+    seq.reserve(b64.size() + (b64.size() / chunk_size + 2) * 64);
+    
+    size_t pos = 0;
     bool first = true;
 
     while (pos < b64.size()) {
@@ -411,20 +416,22 @@ inline std::string build_kitty_upload(const RawImg& img, int id) {
 
         seq += "\033_G";
         if (first) {
-            seq += "a=t,f=24,s=" + std::to_string(img.w) + 
-                   ",v=" + std::to_string(img.h) + ",i=" + std::to_string(id);
+            // "q=2" suprime de la pantalla errores en caso de que ocurran fallas del protocolo 
+            seq += "a=t,q=2,f=24,s=" + std::to_string(img.w) + 
+                   ",v=" + std::to_string(img.h) + ",i=" + std::to_string(id) + ",";
             first = false;
         }
-        seq += ",m=" + std::string(more ? "1" : "0") + ";" + chunk + "\033\\";
+        seq += "m=" + std::string(more ? "1" : "0") + ";" + chunk + "\033\\";
     }
     return seq;
 }
 
 // Renderiza los bloques vacíos para darle espacio a la foto y le manda el comando "mostrar"
 inline std::vector<std::string> render_cover_kitty_display(int cols, int rows, int id) {
+    if (cols <= 0 || rows <= 0) return {};
     std::vector<std::string> lines(rows, std::string(cols, ' '));
-    // a=a (mostrar), C=1 (no mover cursor), z=1 (dibujar encima del texto)
-    lines[0] = "\033_Ga=a,i=" + std::to_string(id) + 
+    // a=a (mostrar), q=2 (silencio absoluto), C=1 (no mover cursor), z=1 (dibujar encima del texto)
+    lines[0] = "\033_Ga=a,q=2,i=" + std::to_string(id) + 
                ",c=" + std::to_string(cols) + 
                ",r=" + std::to_string(rows) + 
                ",C=1,z=1;\033\\" + lines[0];
@@ -436,6 +443,7 @@ inline std::vector<std::string> render_cover_kitty_display(int cols, int rows, i
 // ════════════════════════════════════════════════════════════════════════════
 
 inline std::vector<std::string> render_cover(const RawImg& img, int cols, int rows) {
+    if (cols <= 0 || rows <= 0) return {};
     RawImg sized=resize_img(img, cols, rows*2);
     std::vector<std::string> lines; lines.reserve(rows);
     char esc[64];
@@ -457,6 +465,7 @@ inline std::vector<std::string> render_no_cover(int cols, int rows,
                                                   const char* fg2,
                                                   const char* fg3,
                                                   const char* acc) {
+    if (cols <= 0 || rows <= 0) return {};
     std::vector<std::string> lines(rows);
     static const char* art[]={
         "⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⣶⣾⣿⣿⣿⣿⣷⣶⣶⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀",
@@ -529,25 +538,42 @@ struct CoverCache {
         if (new_song) {
             path = song_path;
             cached_img = path.empty() ? RawImg{} : extract_cover(path);
+            
+            if (is_kitty()) {
+                // Borramos la imagen vieja en RAM para evitar superposiciones (q=2 silencioso)
+                kitty_upload_seq = "\033_Ga=d,d=i,q=2,i=1;\033\\";
+                
+                // Si la canción tiene portada, concatenamos la secuencia para enviarla a RAM
+                if (!cached_img.empty()) {
+                    kitty_upload_seq += build_kitty_upload(cached_img, 1);
+                }
+                kitty_needs_upload = true;
+            }
         }
         cols = c; rows = r;
+
+        if (cols <= 0 || rows <= 0) {
+            lines.clear();
+            return lines;
+        }
 
         if (cached_img.empty()) {
             lines = render_no_cover(cols, rows, fg2, fg3, acc);
         } else if (is_kitty()) {
-            if (new_song) {
-                // Borra la imagen vieja de la RAM de Kitty y sube la nueva en HD
-                kitty_upload_seq = "\033_Ga=d,d=i,i=1;\033\\" + build_kitty_upload(cached_img, 1);
-                kitty_needs_upload = true;
-            }
             lines = render_cover_kitty_display(cols, rows, 1);
         } else {
             lines = render_cover(cached_img, cols, rows);
         }
+
+        if (is_kitty() && kitty_needs_upload && !lines.empty()) {
+            lines[0] = kitty_upload_seq + lines[0];
+            kitty_needs_upload = false;
+        }
+
         return lines;
     }
 
-    // El reproductor llama esto cada vez que redibuja, asegurando que la foto solo se suba una vez por canción.
+
     std::string consume_kitty_upload() {
         if (kitty_needs_upload) {
             kitty_needs_upload = false;
