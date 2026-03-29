@@ -39,7 +39,9 @@ namespace A {
     inline const char* STOP_I = "■";
     inline const char* NOTE   = "♪";
     inline const char* ARR    = "›";
-    inline const char* DIR_I  = "▸";
+    inline const char* DIR_I  = "📁";  // carpeta cerrada
+    inline const char* DIR_O  = "📂";  // carpeta seleccionada / abierta
+    inline const char* AUDIO_I= "≈";   // archivo de audio
     inline const char* SHUF_I = "⇄";
     inline const char* LOOP_I = "↺";
     inline const char* VOL_I  = "▐";
